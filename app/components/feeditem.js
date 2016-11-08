@@ -2,10 +2,7 @@ import React from 'react';
 import StatusUpdate from './statusupdate';
 import CommentThread from './commentthread';
 import Comment from './comment';
-import {postComment} from '../server';
-import {unlikeFeedItem} from '../server';
-import {likeFeedItem} from '../server';
-
+import {postComment, unlikeFeedItem, likeFeedItem, likeComment, unlikeComment} from '../server';
 export default class FeedItem extends React.Component {
   constructor(props) {
     super(props);
@@ -66,12 +63,45 @@ didUserLike() {
   return liked;
 }
 
+///////////////////////////////////////////////////////////Comment Like Area /////////////////////////////////////////////////////////////////////
+handleCommentLike(clickEvent, key){
+  clickEvent.preventDefault();
+  if(clickEvent.button === 0){
+    var callbackFunction = (updatedLikeCounter) => {
+      this.setState(updatedLikeCounter);
+    };
+    if (this.didUserLikeComment(key)==="Unlike"){
+      unlikeComment(this.state._id, key, 4, callbackFunction);
+    }
+    else{
+      likeComment(this.state._id, key, 4, callbackFunction);
+    }
+  }
+}
+
+didUserLikeComment(key){
+  var likeCounter = this.state.comments[key].likeCounter;
+  var liked = "Like";
+
+  for(var i = 0; i < likeCounter.length; i++){
+    if (likeCounter[i] === 4){
+      liked = "Unlike";
+      break;
+    }
+  }
+  return liked;
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   render() {
     var likeButtonText = "Like";
     if(this.didUserLike()){
       likeButtonText = "Unlike";
     }
+
     var data = this.state;
     var contents;
     switch(data.type) {
@@ -129,7 +159,7 @@ didUserLike() {
           <div className="panel-footer">
             <div className="row">
               <div className="col-md-12">
-                <a href="#">{data.likeCounter.length} people</a>
+                <a href="#">{data.likeCounter.length} people </a>
                 like this
               </div>
             </div>
@@ -139,8 +169,11 @@ didUserLike() {
                 // i is comment's index in comments array
                 return (
                   <Comment key={i}
+                    likeCommentText = {this.didUserLikeComment(i)}
+                    onClick = {(e)=> this.handleCommentLike(e, i)}
                     author={comment.author}
-                    postDate={comment.postDate}>
+                    postDate={comment.postDate}
+                    likeCounter = {comment.likeCounter}>
                     {comment.contents}
                   </Comment>
                 );
